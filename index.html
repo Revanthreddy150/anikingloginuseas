@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USEAS - Secure Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-light: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --accent-indigo: #6366f1;
+            --accent-purple: #a855f7;
+            --text-main: #1e293b;
+            --error-red: #ef4444;
+            --gradient: linear-gradient(135deg, var(--accent-indigo) 0%, var(--accent-purple) 100%);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-light);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            color: var(--text-main);
+            background-image: radial-gradient(circle at 50% 50%, #e2e8f0 0%, #f8fafc 100%);
+        }
+
+        #loader { 
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            font-family: 'Plus Jakarta Sans';
+            color: var(--accent-indigo);
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .card { 
+            background: var(--card-bg); padding: 35px; border-radius: 24px; 
+            border: 1px solid rgba(99, 102, 241, 0.1); width: 90%; max-width: 380px; text-align: center;
+            backdrop-filter: blur(10px); box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+            display: none; 
+        }
+
+        .card.visible { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #custom-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; 
+            justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.3s;
+            backdrop-filter: blur(4px);
+        }
+        #custom-modal.active { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background: #ffffff; padding: 25px; border-radius: 15px; width: 300px; text-align: center;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .hidden { display: none !important; }
+        
+        h2, h3 { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase; font-weight: 800;
+        }
+
+        #main-avatar { 
+            width: 100px; height: 100px; border-radius: 50%; 
+            border: 3px solid white; object-fit: cover;
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.2); margin-bottom: 15px;
+        }
+
+        .avatar-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+            margin: 15px 0; padding: 10px; background: #f1f5f9; border-radius: 12px;
+        }
+
+        .avatar-option {
+            width: 100%; aspect-ratio: 1; border-radius: 50%; border: 2px solid transparent;
+            cursor: pointer; transition: 0.2s; opacity: 0.7;
+        }
+        .avatar-option.selected { border-color: var(--accent-indigo); opacity: 1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
+
+        input { 
+            width: 100%; padding: 12px; margin: 10px 0; background: #f8fafc;
+            border: 1px solid #e2e8f0; border-radius: 10px; color: var(--text-main); box-sizing: border-box; 
+        }
+
+        button { 
+            width: 100%; padding: 14px; border: none; border-radius: 10px; 
+            cursor: pointer; font-weight: bold; margin-top: 10px; text-transform: uppercase;
+            transition: 0.3s;
+        }
+        
+        .btn-primary { background: var(--gradient); color: #fff; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2); }
+        .btn-google { background: #fff; color: #444; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: none; font-size: 0.9rem;}
+        .btn-edit { background: transparent; border: 1.5px solid var(--accent-indigo); color: var(--accent-indigo); margin-top: 20px;}
+        .btn-logout { background: none; color: var(--error-red); font-size: 0.8rem; border: none; margin-top: 15px; font-weight: 600; }
+        
+        .divider { margin: 20px 0; display: flex; align-items: center; text-align: center; color: #cbd5e1; font-size: 0.7rem; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; }
+        .divider:not(:empty)::before { margin-right: .5em; }
+        .divider:not(:empty)::after { margin-left: .5em; }
+    </style>
+</head>
+<body>
+
+    <div id="loader">INITIALIZING USEAS SECURE...</div>
+
+    <div id="custom-modal">
+        <div class="modal-content">
+            <h4 id="modal-title" style="color: var(--accent-indigo); margin-top:0;">SYSTEM</h4>
+            <div id="modal-msg" style="font-size: 0.85rem; color: #64748b; margin-bottom: 20px;">Message</div>
+            <button onclick="closeModal()" class="btn-primary" style="padding: 10px;">CLOSE</button>
+        </div>
+    </div>
+
+    <div id="auth-card" class="card">
+        <h2>Access Portal</h2>
+        <input type="email" id="email" placeholder="EMAIL ADDRESS">
+        <input type="password" id="password" placeholder="PASSWORD">
+        <button id="login-btn" class="btn-primary">LOGIN</button>
+        <button id="signup-btn" class="btn-primary hidden">CREATE ACCOUNT</button>
+        
+        <div id="google-section">
+            <div class="divider">OR</div>
+            <button id="google-btn" class="btn-google">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google">
+                Continue with Google
+            </button>
+        </div>
+
+        <div id="toggle-text" style="cursor:pointer; margin-top:15px; font-size:0.8rem; color: #64748b; font-weight: 600;">New User? Register</div>
+        <div id="forgot-password" style="cursor:pointer; margin-top:10px; font-size:0.75rem; color: #94a3b8;">Forgot Password?</div>
+    </div>
+
+    <div id="profile-card" class="card">
+        <h3>User Profile</h3>
+        <img id="main-avatar" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Lucky" alt="Avatar">
+        <div id="display-name" style="font-weight: 700; font-size: 1.3rem;">---</div>
+        <div id="display-email" style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">---</div>
+
+        <div id="edit-box" class="hidden" style="border-top: 1px solid #f1f5f9; padding-top: 15px; margin-top: 15px;">
+            <p style="font-size: 0.7rem; color: var(--accent-indigo); font-weight: 700;">SELECT AVATAR</p>
+            <div class="avatar-grid" id="avatar-selector">
+                <img class="avatar-option" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Felix" data-url="https://api.dicebear.com/7.x/adventurer/svg?seed=Felix">
+                <img class="avatar-option" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka" data-url="https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka">
+                <img class="avatar-option" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Zoro" data-url="https://api.dicebear.com/7.x/adventurer/svg?seed=Zoro">
+                <img class="avatar-option" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Leo" data-url="https://api.dicebear.com/7.x/adventurer/svg?seed=Leo">
+            </div>
+            <input type="text" id="edit-name-input" placeholder="New Name">
+            <button id="save-btn" class="btn-primary">Save Changes</button>
+        </div>
+
+        <button id="toggle-edit-btn" class="btn-edit">Edit Profile</button>
+        <button id="logout-btn" class="btn-logout">Logout Account</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            updateProfile, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            sendPasswordResetEmail, 
+            signOut,
+            GoogleAuthProvider,
+            signInWithPopup // SIGN-IN METHOD FIXED
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyArqJycgZtlLpM7KQ2T9h-e2eJUHtMg-TY",
+            authDomain: "tff-earns.firebaseapp.com",
+            projectId: "tff-earns",
+            storageBucket: "tff-earns.firebasestorage.app",
+            messagingSenderId: "762695597074",
+            appId: "1:762695597074:web:bd7a8df2df2806d5b26ccb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        const loader = document.getElementById('loader');
+        const authCard = document.getElementById('auth-card');
+        const profileCard = document.getElementById('profile-card');
+
+        // UI Helpers
+        window.showNotice = (title, msg) => {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('custom-modal').classList.add('active');
+        };
+        window.closeModal = () => document.getElementById('custom-modal').classList.remove('active');
+
+        const handleAuthError = (errorCode) => {
+            const badCreds = ['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found', 'auth/invalid-email'];
+            if (badCreds.includes(errorCode)) return "Password is wrong or account does not exist.";
+            if (errorCode === 'auth/network-request-failed') return "Network Error: Check your connection.";
+            if (errorCode === 'auth/unauthorized-domain') return "Domain Error: Add this site to Firebase Authorized Domains.";
+            if (errorCode === 'auth/popup-closed-by-user') return "Login closed by user.";
+            return errorCode.replace('auth/', '').replace(/-/g, ' ');
+        };
+
+        // Auth State Listener
+        onAuthStateChanged(auth, (user) => {
+            loader.style.display = 'none'; 
+            if (user) {
+                authCard.classList.remove('visible');
+                profileCard.classList.add('visible');
+                document.getElementById('display-name').innerText = user.displayName || "USEAS STUDENT";
+                document.getElementById('display-email').innerText = user.email;
+                document.getElementById('main-avatar').src = user.photoURL || "https://api.dicebear.com/7.x/adventurer/svg?seed=Lucky";
+            } else {
+                profileCard.classList.remove('visible');
+                authCard.classList.add('visible');
+            }
+        });
+
+        // GOOGLE LOGIN HANDLER (FIXED)
+        document.getElementById('google-btn').onclick = async () => {
+            try {
+                // This triggers the Google account picker popup
+                await signInWithPopup(auth, provider);
+            } catch (e) {
+                showNotice("GOOGLE ERROR", handleAuthError(e.code));
+            }
+        };
+
+        // EMAIL LOGIN HANDLER
+        document.getElementById('login-btn').onclick = async () => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            if(!email || !pass) { showNotice("INPUT ERROR", "Please fill all fields."); return; }
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (e) {
+                showNotice("AUTH ERROR", handleAuthError(e.code));
+            }
+        };
+
+        // SIGNUP HANDLER
+        document.getElementById('signup-btn').onclick = async () => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            if(!email || !pass) { showNotice("INPUT ERROR", "Please fill all fields."); return; }
+            try {
+                await createUserWithEmailAndPassword(auth, email, pass);
+            } catch (e) {
+                showNotice("AUTH ERROR", handleAuthError(e.code));
+            }
+        };
+
+        // RESET PASSWORD
+        document.getElementById('forgot-password').onclick = () => {
+            const emailValue = document.getElementById('email').value;
+            if (!emailValue) { showNotice("NOTICE", "Enter email address first."); return; }
+            sendPasswordResetEmail(auth, emailValue)
+                .then(() => showNotice("SUCCESS", "Reset link sent to your email."))
+                .catch(e => showNotice("ERROR", handleAuthError(e.code)));
+        };
+
+        // LOGOUT
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
+
+        // UPDATE PROFILE
+        document.getElementById('save-btn').onclick = async () => {
+            const user = auth.currentUser;
+            const newName = document.getElementById('edit-name-input').value;
+            const avatar = document.querySelector('.avatar-option.selected')?.dataset.url;
+            try {
+                await updateProfile(user, { 
+                    displayName: newName || user.displayName, 
+                    photoURL: avatar || user.photoURL 
+                });
+                showNotice("SYSTEM", "Profile Updated!");
+                setTimeout(() => location.reload(), 1000);
+            } catch (e) { showNotice("ERROR", handleAuthError(e.code)); }
+        };
+
+        // AVATAR SELECTION
+        document.querySelectorAll('.avatar-option').forEach(img => {
+            img.onclick = function() {
+                document.querySelectorAll('.avatar-option').forEach(i => i.classList.remove('selected'));
+                this.classList.add('selected');
+            };
+        });
+
+        // TOGGLE EDIT BOX
+        document.getElementById('toggle-edit-btn').onclick = function() {
+            document.getElementById('edit-box').classList.toggle('hidden');
+            this.innerText = document.getElementById('edit-box').classList.contains('hidden') ? "Edit Profile" : "Cancel";
+        };
+
+        // TOGGLE LOGIN/REGISTER
+        document.getElementById('toggle-text').onclick = function() {
+            const isLogin = !document.getElementById('login-btn').classList.contains('hidden');
+            document.getElementById('login-btn').classList.toggle('hidden');
+            document.getElementById('signup-btn').classList.toggle('hidden');
+            document.getElementById('forgot-password').classList.toggle('hidden');
+            document.getElementById('google-section').classList.toggle('hidden');
+            this.innerText = isLogin ? "Have an account? Login" : "New User? Register";
+        };
+    </script>
+</body>
+</html>
+

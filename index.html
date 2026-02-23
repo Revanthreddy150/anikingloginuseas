@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>USEAS - Secure Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --bg-light: #f8fafc;
@@ -17,172 +18,196 @@
         }
 
         body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-light);
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 100vh; 
-            margin: 0; 
-            color: var(--text-main);
+            font-family: 'Inter', sans-serif; background-color: var(--bg-light);
+            display: flex; align-items: center; justify-content: center; 
+            min-height: 100vh; margin: 0; color: var(--text-main);
             background-image: radial-gradient(circle at 50% 50%, #e2e8f0 0%, #f8fafc 100%);
         }
 
         #loader { 
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            font-family: 'Plus Jakarta Sans';
-            color: var(--accent-indigo);
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-light); display: flex; align-items: center;
+            justify-content: center; z-index: 9999; font-family: 'Plus Jakarta Sans';
+            color: var(--accent-indigo); font-weight: 700;
+        }
+
+        /* --- ANIMATED COLOR RING --- */
+        .avatar-wrapper {
+            position: relative; width: 120px; height: 120px;
+            margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;
+        }
+
+        .animated-ring {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            background: linear-gradient(45deg, #6366f1, #a855f7, #ec4899, #06b6d4, #6366f1);
+            background-size: 300% 300%;
+            animation: ringRotate 4s linear infinite, colorShift 8s ease infinite;
+        }
+
+        @keyframes ringRotate { 100% { transform: rotate(360deg); } }
+        @keyframes colorShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        #main-avatar { 
+            width: 108px; height: 108px; border-radius: 50%; border: 4px solid white; 
+            object-fit: cover; position: relative; z-index: 2; background: white;
         }
 
         .card { 
-            background: var(--card-bg); padding: 35px; border-radius: 24px; 
-            border: 1px solid rgba(99, 102, 241, 0.1); width: 90%; max-width: 380px; text-align: center;
-            backdrop-filter: blur(10px); box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+            background: var(--card-bg); padding: 30px; border-radius: 24px; 
+            border: 1px solid rgba(99, 102, 241, 0.1); width: 90%; max-width: 400px; 
+            text-align: center; backdrop-filter: blur(10px); box-shadow: 0 20px 40px rgba(0,0,0,0.06);
             display: none; 
         }
 
         .card.visible { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        #custom-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; 
-            justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.3s;
-            backdrop-filter: blur(4px);
+        /* --- INPUTS & EYE ICONS --- */
+        .input-group { position: relative; margin: 10px 0; }
+        input { 
+            width: 100%; padding: 12px 45px 12px 12px; background: #f8fafc; 
+            border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-family: inherit;
         }
-        #custom-modal.active { opacity: 1; pointer-events: all; }
-        .modal-content {
-            background: #ffffff; padding: 25px; border-radius: 15px; width: 300px; text-align: center;
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
-        }
-
-        .hidden { display: none !important; }
-        
-        h2, h3 { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase; font-weight: 800;
-        }
-
-        #main-avatar { 
-            width: 100px; height: 100px; border-radius: 50%; 
-            border: 3px solid white; object-fit: cover;
-            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.2); margin-bottom: 15px;
+        .toggle-pass { 
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%); 
+            cursor: pointer; color: #94a3b8; font-size: 1rem; z-index: 10;
         }
 
         .avatar-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
             margin: 15px 0; padding: 10px; background: #f1f5f9; border-radius: 12px;
+            max-height: 180px; overflow-y: auto;
         }
 
         .avatar-option {
             width: 100%; aspect-ratio: 1; border-radius: 50%; border: 2px solid transparent;
-            cursor: pointer; transition: 0.2s; opacity: 0.7;
+            cursor: pointer; transition: 0.2s; background: white;
         }
-        .avatar-option.selected { border-color: var(--accent-indigo); opacity: 1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
+        .avatar-option.selected { border-color: var(--accent-indigo); transform: scale(1.1); }
 
-        input { 
-            width: 100%; padding: 12px; margin: 10px 0; background: #f8fafc;
-            border: 1px solid #e2e8f0; border-radius: 10px; color: var(--text-main); box-sizing: border-box; 
-        }
-
-        button { 
-            width: 100%; padding: 14px; border: none; border-radius: 10px; 
-            cursor: pointer; font-weight: bold; margin-top: 10px; text-transform: uppercase;
-            transition: 0.3s;
-        }
-        
-        .btn-primary { background: var(--gradient); color: #fff; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2); }
-        .btn-google { background: #fff; color: #444; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: none; font-size: 0.9rem;}
-        .btn-edit { background: transparent; border: 1.5px solid var(--accent-indigo); color: var(--accent-indigo); margin-top: 20px;}
+        button { width: 100%; padding: 14px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 10px; text-transform: uppercase; transition: 0.3s; }
+        .btn-primary { background: var(--gradient); color: #fff; }
+        .btn-google { background: #fff; color: #444; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: none; }
+        .btn-outline { background: transparent; border: 1.5px solid var(--accent-indigo); color: var(--accent-indigo); margin-top: 15px; }
         .btn-logout { background: none; color: var(--error-red); font-size: 0.8rem; border: none; margin-top: 15px; font-weight: 600; }
         
-        .divider { margin: 20px 0; display: flex; align-items: center; text-align: center; color: #cbd5e1; font-size: 0.7rem; }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; }
-        .divider:not(:empty)::before { margin-right: .5em; }
-        .divider:not(:empty)::after { margin-left: .5em; }
+        .hidden { display: none !important; }
+        
+        #custom-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; 
+            justify-content: center; z-index: 10000; opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        #custom-modal.active { opacity: 1; pointer-events: all; }
+        .modal-content { background: #fff; padding: 25px; border-radius: 20px; width: 300px; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div id="loader">INITIALIZING USEAS SECURE...</div>
+    <div id="loader">INITIALIZING USEAS...</div>
 
     <div id="custom-modal">
         <div class="modal-content">
-            <h4 id="modal-title" style="color: var(--accent-indigo); margin-top:0;">SYSTEM</h4>
-            <div id="modal-msg" style="font-size: 0.85rem; color: #64748b; margin-bottom: 20px;">Message</div>
-            <button onclick="closeModal()" class="btn-primary" style="padding: 10px;">CLOSE</button>
+            <h4 id="modal-title" style="color: var(--accent-indigo); margin:0;">SYSTEM</h4>
+            <div id="modal-msg" style="font-size: 0.85rem; margin: 15px 0 20px;"></div>
+            
+            <div id="modal-extra-input" class="hidden">
+                 <div class="input-group">
+                    <input type="password" id="modal-pass-input" placeholder="New Password">
+                    <i class="fa-solid fa-eye toggle-pass" onclick="toggleVisibility('modal-pass-input', this)"></i>
+                 </div>
+                 <div class="input-group">
+                    <input type="password" id="modal-conf-input" placeholder="Confirm Password">
+                    <i class="fa-solid fa-eye toggle-pass" onclick="toggleVisibility('modal-conf-input', this)"></i>
+                 </div>
+                 <button id="modal-action-btn" class="btn-primary">Set Password</button>
+            </div>
+            
+            <button id="modal-close-btn" onclick="document.getElementById('custom-modal').classList.remove('active')" class="btn-primary" style="padding: 10px;">OK</button>
         </div>
     </div>
 
     <div id="auth-card" class="card">
-        <h2>Access Portal</h2>
+        <h2 style="font-family: 'Plus Jakarta Sans';">Access Portal</h2>
         <input type="email" id="email" placeholder="EMAIL ADDRESS">
-        <input type="password" id="password" placeholder="PASSWORD">
+        <div class="input-group">
+            <input type="password" id="password" placeholder="PASSWORD">
+            <i class="fa-solid fa-eye toggle-pass" onclick="toggleVisibility('password', this)"></i>
+        </div>
         <button id="login-btn" class="btn-primary">LOGIN</button>
         <button id="signup-btn" class="btn-primary hidden">CREATE ACCOUNT</button>
         
         <div id="google-section">
-            <div class="divider">OR</div>
+            <div style="margin: 15px 0; color: #cbd5e1; font-size: 0.7rem;">OR</div>
             <button id="google-btn" class="btn-google">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
                 Continue with Google
             </button>
         </div>
 
-        <div id="toggle-text" style="cursor:pointer; margin-top:15px; font-size:0.8rem; color: #64748b; font-weight: 600;">New User? Register</div>
-        <div id="forgot-password" style="cursor:pointer; margin-top:10px; font-size:0.75rem; color: #94a3b8;">Forgot Password?</div>
+        <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 0.75rem;">
+            <span id="toggle-text" style="cursor:pointer; color: var(--accent-indigo); font-weight: 600;">New User? Register</span>
+            <span id="forgot-pass-btn" style="cursor:pointer; color: #64748b;">Forgot Password?</span>
+        </div>
     </div>
 
     <div id="profile-card" class="card">
-        <h3>User Profile</h3>
-        <img id="main-avatar" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Lucky" alt="Avatar">
-        <div id="display-name" style="font-weight: 700; font-size: 1.3rem;">---</div>
-        <div id="display-email" style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">---</div>
-
-        <div id="edit-box" class="hidden" style="border-top: 1px solid #f1f5f9; padding-top: 15px; margin-top: 15px;">
-            <p style="font-size: 0.7rem; color: var(--accent-indigo); font-weight: 700;">SELECT AVATAR</p>
-            <div class="avatar-grid" id="avatar-selector">
-                <img class="avatar-option" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Felix" data-url="https://api.dicebear.com/7.x/adventurer/svg?seed=Felix">
-                <img class="avatar-option" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka" data-url="https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka">
-                <img class="avatar-option" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Zoro" data-url="https://api.dicebear.com/7.x/adventurer/svg?seed=Zoro">
-                <img class="avatar-option" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Leo" data-url="https://api.dicebear.com/7.x/adventurer/svg?seed=Leo">
-            </div>
-            <input type="text" id="edit-name-input" placeholder="New Name">
-            <button id="save-btn" class="btn-primary">Save Changes</button>
+        <h3 style="font-family: 'Plus Jakarta Sans'; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-top: 0;">USER PROFILE</h3>
+        
+        <div class="avatar-wrapper">
+            <div class="animated-ring"></div>
+            <img id="main-avatar" src="" alt="Profile">
         </div>
 
-        <button id="toggle-edit-btn" class="btn-edit">Edit Profile</button>
+        <div id="display-name" style="font-weight: 700; font-size: 1.2rem;">---</div>
+        <div id="display-email" style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">---</div>
+
+        <div id="edit-box" class="hidden" style="border-top: 1px solid #eee; padding-top: 10px;">
+            <p style="font-size: 0.7rem; color: var(--accent-indigo); font-weight: 700;">SELECT AVATAR (50 MODELS)</p>
+            <div class="avatar-grid" id="avatar-selector"></div>
+            <input type="text" id="edit-name-input" placeholder="Update Name">
+            <button id="save-btn" class="btn-primary">UPDATE PROFILE</button>
+        </div>
+
+        <div id="password-box" class="hidden" style="border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px;">
+            <p style="font-size: 0.7rem; color: var(--accent-purple); font-weight: 700;">SECURITY SETTINGS</p>
+            <div id="standard-pw-fields">
+                <div class="input-group">
+                    <input type="password" id="old-pass" placeholder="Old Password">
+                    <i class="fa-solid fa-eye toggle-pass" onclick="toggleVisibility('old-pass', this)"></i>
+                </div>
+            </div>
+            <div class="input-group">
+                <input type="password" id="new-pass" placeholder="New Password">
+                <i class="fa-solid fa-eye toggle-pass" onclick="toggleVisibility('new-pass', this)"></i>
+            </div>
+            <div class="input-group">
+                <input type="password" id="confirm-pass" placeholder="Confirm Password">
+                <i class="fa-solid fa-eye toggle-pass" onclick="toggleVisibility('confirm-pass', this)"></i>
+            </div>
+            <button id="confirm-pass-btn" class="btn-primary">UPDATE PASSWORD</button>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button id="toggle-edit-btn" class="btn-outline" style="font-size: 0.7rem;"><i class="fa-solid fa-user-pen"></i> EDIT</button>
+            <button id="toggle-pass-btn" class="btn-outline" style="font-size: 0.7rem;"><i class="fa-solid fa-lock"></i> SECURITY</button>
+        </div>
+        
         <button id="logout-btn" class="btn-logout">Logout Account</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { 
-            getAuth, 
-            onAuthStateChanged, 
-            updateProfile, 
-            signInWithEmailAndPassword, 
-            createUserWithEmailAndPassword, 
-            sendPasswordResetEmail, 
-            signOut,
-            GoogleAuthProvider,
-            signInWithPopup // SIGN-IN METHOD FIXED
+            getAuth, onAuthStateChanged, updateProfile, signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, signOut, sendPasswordResetEmail,
+            updatePassword, EmailAuthProvider, reauthenticateWithCredential,
+            GoogleAuthProvider, signInWithPopup
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyArqJycgZtlLpM7KQ2T9h-e2eJUHtMg-TY",
             authDomain: "tff-earns.firebaseapp.com",
@@ -196,127 +221,144 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        const loader = document.getElementById('loader');
-        const authCard = document.getElementById('auth-card');
-        const profileCard = document.getElementById('profile-card');
+        // --- PASSWORD VISIBILITY LOGIC ---
+        window.toggleVisibility = (id, icon) => {
+            const input = document.getElementById(id);
+            if(input.type === "password") {
+                input.type = "text";
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        };
 
-        // UI Helpers
-        window.showNotice = (title, msg) => {
+        // --- CUSTOM ERROR MESSAGES (NO FIREBASE JARGON) ---
+        const mapError = (code) => {
+            switch(code) {
+                case 'auth/invalid-credential': return "Access Denied: Email or Password incorrect.";
+                case 'auth/user-not-found': return "Account Not Found: Please register first.";
+                case 'auth/wrong-password': return "Incorrect Password: Try again.";
+                case 'auth/email-already-in-use': return "Registration Failed: Email already registered.";
+                case 'auth/weak-password': return "Security Weak: Password must be at least 6 characters.";
+                case 'auth/network-request-failed': return "Connection Lost: Please check your network.";
+                case 'auth/popup-closed-by-user': return "Login Cancelled: Google popup closed.";
+                case 'auth/too-many-requests': return "Security Block: Too many attempts. Try later.";
+                default: return "USEAS System Error: Something went wrong.";
+            }
+        };
+
+        const showNotice = (title, msg) => {
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('modal-extra-input').classList.add('hidden');
+            document.getElementById('modal-close-btn').classList.remove('hidden');
             document.getElementById('custom-modal').classList.add('active');
         };
-        window.closeModal = () => document.getElementById('custom-modal').classList.remove('active');
 
-        const handleAuthError = (errorCode) => {
-            const badCreds = ['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found', 'auth/invalid-email'];
-            if (badCreds.includes(errorCode)) return "Password is wrong or account does not exist.";
-            if (errorCode === 'auth/network-request-failed') return "Network Error: Check your connection.";
-            if (errorCode === 'auth/unauthorized-domain') return "Domain Error: Add this site to Firebase Authorized Domains.";
-            if (errorCode === 'auth/popup-closed-by-user') return "Login closed by user.";
-            return errorCode.replace('auth/', '').replace(/-/g, ' ');
-        };
-
-        // Auth State Listener
-        onAuthStateChanged(auth, (user) => {
-            loader.style.display = 'none'; 
-            if (user) {
-                authCard.classList.remove('visible');
-                profileCard.classList.add('visible');
-                document.getElementById('display-name').innerText = user.displayName || "USEAS STUDENT";
-                document.getElementById('display-email').innerText = user.email;
-                document.getElementById('main-avatar').src = user.photoURL || "https://api.dicebear.com/7.x/adventurer/svg?seed=Lucky";
-            } else {
-                profileCard.classList.remove('visible');
-                authCard.classList.add('visible');
-            }
-        });
-
-        // GOOGLE LOGIN HANDLER (FIXED)
-        document.getElementById('google-btn').onclick = async () => {
-            try {
-                // This triggers the Google account picker popup
-                await signInWithPopup(auth, provider);
-            } catch (e) {
-                showNotice("GOOGLE ERROR", handleAuthError(e.code));
-            }
-        };
-
-        // EMAIL LOGIN HANDLER
-        document.getElementById('login-btn').onclick = async () => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-            if(!email || !pass) { showNotice("INPUT ERROR", "Please fill all fields."); return; }
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-            } catch (e) {
-                showNotice("AUTH ERROR", handleAuthError(e.code));
-            }
-        };
-
-        // SIGNUP HANDLER
-        document.getElementById('signup-btn').onclick = async () => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-            if(!email || !pass) { showNotice("INPUT ERROR", "Please fill all fields."); return; }
-            try {
-                await createUserWithEmailAndPassword(auth, email, pass);
-            } catch (e) {
-                showNotice("AUTH ERROR", handleAuthError(e.code));
-            }
-        };
-
-        // RESET PASSWORD
-        document.getElementById('forgot-password').onclick = () => {
-            const emailValue = document.getElementById('email').value;
-            if (!emailValue) { showNotice("NOTICE", "Enter email address first."); return; }
-            sendPasswordResetEmail(auth, emailValue)
-                .then(() => showNotice("SUCCESS", "Reset link sent to your email."))
-                .catch(e => showNotice("ERROR", handleAuthError(e.code)));
-        };
-
-        // LOGOUT
-        document.getElementById('logout-btn').onclick = () => signOut(auth);
-
-        // UPDATE PROFILE
-        document.getElementById('save-btn').onclick = async () => {
-            const user = auth.currentUser;
-            const newName = document.getElementById('edit-name-input').value;
-            const avatar = document.querySelector('.avatar-option.selected')?.dataset.url;
-            try {
-                await updateProfile(user, { 
-                    displayName: newName || user.displayName, 
-                    photoURL: avatar || user.photoURL 
-                });
-                showNotice("SYSTEM", "Profile Updated!");
-                setTimeout(() => location.reload(), 1000);
-            } catch (e) { showNotice("ERROR", handleAuthError(e.code)); }
-        };
-
-        // AVATAR SELECTION
-        document.querySelectorAll('.avatar-option').forEach(img => {
-            img.onclick = function() {
-                document.querySelectorAll('.avatar-option').forEach(i => i.classList.remove('selected'));
-                this.classList.add('selected');
+        // --- AVATAR GRID GENERATOR ---
+        const grid = document.getElementById('avatar-selector');
+        for (let i = 1; i <= 50; i++) {
+            const img = document.createElement('img');
+            const url = `https://api.dicebear.com/7.x/adventurer/svg?seed=${i + 999}`;
+            img.src = url; img.className = 'avatar-option';
+            img.onclick = () => {
+                document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                img.classList.add('selected'); img.dataset.url = url;
             };
+            grid.appendChild(img);
+        }
+
+        // --- AUTH STATE & GOOGLE SETUP PROMPT ---
+        onAuthStateChanged(auth, (user) => {
+            document.getElementById('loader').style.display = 'none';
+            if (user) {
+                document.getElementById('auth-card').classList.remove('visible');
+                document.getElementById('profile-card').classList.add('visible');
+                document.getElementById('display-name').innerText = user.displayName || "USEAS Student";
+                document.getElementById('display-email').innerText = user.email;
+                document.getElementById('main-avatar').src = user.photoURL || `https://api.dicebear.com/7.x/adventurer/svg?seed=Lucky`;
+
+                const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
+                const hasPassword = user.providerData.some(p => p.providerId === 'password');
+                
+                if(isGoogleUser && !hasPassword) {
+                    document.getElementById('modal-title').innerText = "SECURITY ACTION";
+                    document.getElementById('modal-msg').innerText = "Please set a password for your account to ensure secure login next time.";
+                    document.getElementById('modal-extra-input').classList.remove('hidden');
+                    document.getElementById('modal-close-btn').classList.add('hidden');
+                    document.getElementById('custom-modal').classList.add('active');
+                    document.getElementById('standard-pw-fields').classList.add('hidden');
+                } else {
+                    document.getElementById('standard-pw-fields').classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('profile-card').classList.remove('visible');
+                document.getElementById('auth-card').classList.add('visible');
+            }
         });
 
-        // TOGGLE EDIT BOX
-        document.getElementById('toggle-edit-btn').onclick = function() {
-            document.getElementById('edit-box').classList.toggle('hidden');
-            this.innerText = document.getElementById('edit-box').classList.contains('hidden') ? "Edit Profile" : "Cancel";
+        // MODAL ACTION (SET PASSWORD)
+        document.getElementById('modal-action-btn').onclick = async () => {
+            const pw = document.getElementById('modal-pass-input').value;
+            const cp = document.getElementById('modal-conf-input').value;
+            if(pw !== cp) return showNotice("ERROR", "Passwords do not match!");
+            try {
+                await updatePassword(auth.currentUser, pw);
+                showNotice("SUCCESS", "Password successfully set!");
+            } catch (e) { showNotice("SYSTEM ERROR", mapError(e.code)); }
         };
 
-        // TOGGLE LOGIN/REGISTER
+        // GOOGLE LOGIN
+        document.getElementById('google-btn').onclick = () => signInWithPopup(auth, provider).catch(e => showNotice("ERROR", mapError(e.code)));
+
+        // PROFILE UPDATE
+        document.getElementById('save-btn').onclick = async () => {
+            const sel = document.querySelector('.avatar-option.selected');
+            const name = document.getElementById('edit-name-input').value;
+            try {
+                await updateProfile(auth.currentUser, { 
+                    displayName: name || auth.currentUser.displayName, 
+                    photoURL: sel ? sel.dataset.url : auth.currentUser.photoURL 
+                });
+                location.reload();
+            } catch (e) { showNotice("ERROR", mapError(e.code)); }
+        };
+
+        // PASSWORD CHANGE
+        document.getElementById('confirm-pass-btn').onclick = async () => {
+            const user = auth.currentUser;
+            const oldP = document.getElementById('old-pass').value;
+            const newP = document.getElementById('new-pass').value;
+            try {
+                if(!document.getElementById('standard-pw-fields').classList.contains('hidden')) {
+                    const cred = EmailAuthProvider.credential(user.email, oldP);
+                    await reauthenticateWithCredential(user, cred);
+                }
+                await updatePassword(user, newP);
+                showNotice("SUCCESS", "Password Updated!");
+            } catch (e) { showNotice("ERROR", mapError(e.code)); }
+        };
+
+        // UI HELPERS
+        document.getElementById('login-btn').onclick = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(e => showNotice("AUTH ERROR", mapError(e.code)));
+        document.getElementById('signup-btn').onclick = () => createUserWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(e => showNotice("AUTH ERROR", mapError(e.code)));
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
+        document.getElementById('forgot-pass-btn').onclick = () => {
+            const em = document.getElementById('email').value;
+            if(!em) return showNotice("SYSTEM", "Enter email address first.");
+            sendPasswordResetEmail(auth, em).then(() => showNotice("SENT", "Check your inbox for a reset link.")).catch(e => showNotice("ERROR", mapError(e.code)));
+        };
+
+        document.getElementById('toggle-edit-btn').onclick = () => { document.getElementById('edit-box').classList.toggle('hidden'); document.getElementById('password-box').classList.add('hidden'); };
+        document.getElementById('toggle-pass-btn').onclick = () => { document.getElementById('password-box').classList.toggle('hidden'); document.getElementById('edit-box').classList.add('hidden'); };
         document.getElementById('toggle-text').onclick = function() {
-            const isLogin = !document.getElementById('login-btn').classList.contains('hidden');
+            const isL = !document.getElementById('login-btn').classList.contains('hidden');
             document.getElementById('login-btn').classList.toggle('hidden');
             document.getElementById('signup-btn').classList.toggle('hidden');
-            document.getElementById('forgot-password').classList.toggle('hidden');
             document.getElementById('google-section').classList.toggle('hidden');
-            this.innerText = isLogin ? "Have an account? Login" : "New User? Register";
+            this.innerText = isL ? "Have account? Login" : "New User? Register";
         };
     </script>
 </body>
 </html>
-
